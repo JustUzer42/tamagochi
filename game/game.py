@@ -2,7 +2,6 @@
 
 from abc import ABC, abstractmethod
 from typing import Any
-
 from .clicker import AbstractClicker
 from .exceptions import NotEnoughMoney, TamagochiIsGone
 from .models import Food, Medicine

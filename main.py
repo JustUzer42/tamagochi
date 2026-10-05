@@ -1,5 +1,4 @@
 import os
-
 from game.clicker import SimpleRandomClicker
 from game.exceptions import NotEnoughMoney, TamagochiIsGone
 from game.game import SimpleGame

@@ -1,9 +1,7 @@
 """Модуль с интерфейсом и реализациями класса тамагочи."""
 
-from abc import ABC, abstractmethod
-
 import random
-
+from abc import ABC, abstractmethod
 from .models import Food, Medicine
 
 
