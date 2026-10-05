@@ -137,7 +137,8 @@ class SimpleGame(AbstractGame):
         """
         if not self._tamagochi.is_alive():
             raise TamagochiIsGone()
-        earned = self._clicker.click()
+        self._clicker.click()
+        earned = self._clicker.last_earned
         self._tamagochi.coins += earned
         return earned
 

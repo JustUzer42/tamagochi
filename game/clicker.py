@@ -12,12 +12,17 @@ class AbstractClicker(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def click(self) -> int:
-        """Абстрактный метод клика для накапливания монет.
-
-        :return: количество заработанных монет за клик
-        """
+    def click(self) -> None:
+        """Абстрактный метод клика для накапливания монет."""
         raise NotImplementedError
+
+    @property
+    def last_earned(self) -> int:
+        """Последнее заработанное количество монет.
+
+        :return: количество монет, заработанных при последнем клике
+        """
+        return self.income_per_click
 
     @property
     @abstractmethod
@@ -44,17 +49,13 @@ class SimpleRandomClicker(AbstractClicker):
         self._coins = 0
         self._last_earned = 0
 
-    def click(self) -> int:
-        """Заработать случайное количество монет.
-
-        :return: количество заработанных монет за клик
-        """
+    def click(self) -> None:
+        """Заработать случайное количество монет."""
         earned = random.randint(
             self._income_per_click, self._max_income_per_click
         )
         self._last_earned = earned
         self._coins += earned
-        return earned
 
     @property
     def last_earned(self) -> int:
