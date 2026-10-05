@@ -2,6 +2,7 @@
 
 import random
 from abc import ABC, abstractmethod
+
 from .models import Food, Medicine
 
 
