@@ -78,8 +78,12 @@ class AbstractTamagochi(ABC):
 class SimpleTamagochi(AbstractTamagochi):
     """Реализация тамагочи с базовой логикой состояния."""
 
-    def __init__(self) -> None:
-        """Инициализация тамагочи."""
+    def __init__(self, name: str = "Тамагочи") -> None:
+        """Инициализация тамагочи.
+
+        :param name: имя питомца
+        """
+        self._name = name
         self._hunger: int = 50  # 0 - не голоден, 100 - сильно голоден
         self._hp: int = 100  # здоровье
         self._energy: int = 100  # энергия

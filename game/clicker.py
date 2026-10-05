@@ -8,7 +8,6 @@ from abc import ABC, abstractmethod
 class AbstractClicker(ABC):
     """Интерфейс для кликера."""
 
-    @abstractmethod
     def __init__(self) -> None:
         """Абстрактный метод инициализации."""
         raise NotImplementedError
