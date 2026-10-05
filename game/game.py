@@ -166,7 +166,6 @@ class SimpleGame(AbstractGame):
                 if self._tamagochi.coins >= food.price:
                     self._tamagochi.coins -= food.price
                     self._inventory_food.append(food)
-                    self._shop_food.pop(choice)
                     print(f"Куплено: {food.name}!")
                 else:
                     raise NotEnoughMoney(
@@ -204,7 +203,6 @@ class SimpleGame(AbstractGame):
                 if self._tamagochi.coins >= med.price:
                     self._tamagochi.coins -= med.price
                     self._inventory_medicine.append(med)
-                    self._shop_medicine.pop(choice)
                     print(f"Куплено: {med.name}!")
                 else:
                     raise NotEnoughMoney(
