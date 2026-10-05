@@ -41,13 +41,22 @@ class SimpleRandomClicker(AbstractClicker):
         self._income_per_click = income_per_click
         self._max_income_per_click = max_income_per_click
         self._coins = 0
+        self._last_earned = 0
 
     def click(self) -> None:
         """Заработать случайное количество монет."""
-        earned = random.randint(
+        self._last_earned = random.randint(
             self._income_per_click, self._max_income_per_click
         )
-        self._coins += earned
+        self._coins += self._last_earned
+
+    @property
+    def last_earned(self) -> int:
+        """Последнее заработанное количество монет.
+
+        :return: количество монет, заработанных при последнем клике
+        """
+        return self._last_earned
 
     @property
     def income_per_click(self) -> int:

@@ -78,12 +78,8 @@ class AbstractTamagochi(ABC):
 class SimpleTamagochi(AbstractTamagochi):
     """Реализация тамагочи с базовой логикой состояния."""
 
-    def __init__(self, name: str = "Тамагочи") -> None:
-        """Инициализация тамагочи.
-
-        :param name: имя питомца
-        """
-        self._name = name
+    def __init__(self) -> None:
+        """Инициализация тамагочи."""
         self._hunger: int = 50  # 0 - не голоден, 100 - сильно голоден
         self._hp: int = 100  # здоровье
         self._energy: int = 100  # энергия
@@ -110,14 +106,12 @@ class SimpleTamagochi(AbstractTamagochi):
         """Кормить тамагочи.
 
         Уменьшает голод на величину насыщения еды.
-        Может немного уменьшить энергию.
-        Списывает стоимость еды из монет.
+        Уменьшает энергию.
 
         :param food: объект еды для кормления
         """
         self._hunger = max(0, self._hunger - food.satiety)
         self._energy = max(0, self._energy - 5)
-        self._coins -= food.price
 
     def play(self) -> None:
         """Поиграть с тамагочи.
@@ -143,7 +137,6 @@ class SimpleTamagochi(AbstractTamagochi):
 
         Восстанавливает здоровье, снимает болезнь.
         Увеличивает счётчик использований лекарства.
-        Списывает стоимость лекарства из монет.
 
         :param medicine: лекарство для лечения
         """
@@ -152,7 +145,6 @@ class SimpleTamagochi(AbstractTamagochi):
         self._hp = min(100, self._hp + medicine.heal_hp)
         self._is_sick = False
         medicine.uses += 1
-        self._coins -= medicine.price
 
     @property
     def status(self) -> dict[str, int]:
@@ -169,9 +161,9 @@ class SimpleTamagochi(AbstractTamagochi):
     def is_alive(self) -> bool:
         """Проверка, жив ли тамагочи.
 
-        :return: True если здоровье >= 0
+        :return: True если здоровье > 0
         """
-        return self._hp >= 0
+        return self._hp > 0
 
     def is_sick(self) -> bool:
         """Проверка, болен ли тамагочи.

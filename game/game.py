@@ -6,28 +6,11 @@ from typing import Any
 from .tamagochi import AbstractTamagochi
 from .clicker import AbstractClicker
 from .models import Food, Medicine
+from .exceptions import TamagochiIsGone, NotEnoughMoney
 
 
 class AbstractGame(ABC):
     """Интерфейс для логики игры."""
-
-    @abstractmethod
-    def __init__(
-        self,
-        tamagochi: AbstractTamagochi,
-        clicker: AbstractClicker,
-        all_food: list[Food],
-        all_medicine: list[Medicine]
-    ):
-        """
-        Абстрактный метод инициализации класса игры
-
-        :param tamagochi: экземпляр тамагочи
-        :param clicker: экземпляр кликера
-        :param all_food: все доступные варианты еды
-        :param all_medicine: все доступные варианты лекарств
-        """
-        raise NotImplementedError
 
     @abstractmethod
     def work(self) -> int:
@@ -150,9 +133,12 @@ class SimpleGame(AbstractGame):
         """Пойти на работу — использовать кликер для заработка монет.
 
         :return: количество заработанных монет
+        :raises TamagochiIsGone: если тамагочи мёртв
         """
+        if not self._tamagochi.is_alive():
+            raise TamagochiIsGone()
         self._clicker.click()
-        earned = self._clicker.income_per_click
+        earned = self._clicker.last_earned
         self._tamagochi.coins += earned
         return earned
 
@@ -183,7 +169,10 @@ class SimpleGame(AbstractGame):
                     self._shop_food.pop(choice)
                     print(f"Куплено: {food.name}!")
                 else:
-                    print("Недостаточно монет!")
+                    raise NotEnoughMoney(
+                        f"Недостаточно монет для покупки "
+                        f"{food.name} (нужно {food.price})"
+                    )
             else:
                 print("Неверный выбор!")
         except (ValueError, IndexError):
@@ -218,7 +207,10 @@ class SimpleGame(AbstractGame):
                     self._shop_medicine.pop(choice)
                     print(f"Куплено: {med.name}!")
                 else:
-                    print("Недостаточно монет!")
+                    raise NotEnoughMoney(
+                        f"Недостаточно монет для покупки "
+                        f"{med.name} (нужно {med.price})"
+                    )
             else:
                 print("Неверный выбор!")
         except (ValueError, IndexError):
@@ -229,7 +221,12 @@ class SimpleGame(AbstractGame):
 
         Показывает еду в инвентаре и предлагает выбрать.
         При кормлении вызывает tamagochi.feed().
+
+        :raises TamagochiIsGone: если тамагочи мёртв
         """
+        if not self._tamagochi.is_alive():
+            raise TamagochiIsGone()
+
         if not self._inventory_food:
             print("В инвентаре нет еды! Купите еду в магазине.")
             return
@@ -254,7 +251,12 @@ class SimpleGame(AbstractGame):
 
         Показывает лекарства в инвентаре и предлагает выбрать.
         При лечении вызывает tamagochi.heal().
+
+        :raises TamagochiIsGone: если тамагочи мёртв
         """
+        if not self._tamagochi.is_alive():
+            raise TamagochiIsGone()
+
         if not self._inventory_medicine:
             print("В инвентаре нет лекарств! Купите лекарства в магазине.")
             return
@@ -292,14 +294,22 @@ class SimpleGame(AbstractGame):
         """Отдохнуть с тамагочи.
 
         Вызывает tamagochi.rest() для восстановления энергии.
+
+        :raises TamagochiIsGone: если тамагочи мёртв
         """
+        if not self._tamagochi.is_alive():
+            raise TamagochiIsGone()
         self._tamagochi.rest()
 
     def play_with_tamagochi(self) -> None:
         """Поиграть с тамагочи.
 
         Вызывает tamagochi.play().
+
+        :raises TamagochiIsGone: если тамагочи мёртв
         """
+        if not self._tamagochi.is_alive():
+            raise TamagochiIsGone()
         self._tamagochi.play()
 
     def get_status(self) -> dict[str, Any]:

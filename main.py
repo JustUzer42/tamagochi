@@ -1,6 +1,10 @@
 import os
 
 from game.models import Food, Medicine
+from game.tamagochi import SimpleTamagochi
+from game.clicker import SimpleRandomClicker
+from game.game import SimpleGame
+from game.exceptions import TamagochiIsGone, NotEnoughMoney
 
 
 def main():
@@ -46,30 +50,51 @@ def main():
 
         match input("Выберите действие: "):
             case "1":
-                income = game.work()
-                output = f'Вы заработали {income} монет'
-                game.tamagochi.update()
+                try:
+                    income = game.work()
+                    output = f'Вы заработали {income} монет'
+                    game.tamagochi.update()
+                except TamagochiIsGone as e:
+                    output = str(e)
             case "2":
-                game.buy_food()
+                try:
+                    game.buy_food()
+                except NotEnoughMoney as e:
+                    output = str(e)
             case "3":
-                game.buy_medicine()
+                try:
+                    game.buy_medicine()
+                except NotEnoughMoney as e:
+                    output = str(e)
             case "4":
-                game.feed_tamagochi()
+                try:
+                    game.feed_tamagochi()
+                except TamagochiIsGone as e:
+                    output = str(e)
 
             case "5":
-                game.heal_tamagochi()
+                try:
+                    game.heal_tamagochi()
+                except TamagochiIsGone as e:
+                    output = str(e)
             case "6":
-                game.play_with_tamagochi()
-                output = 'Вы поиграли с питомцем'
+                try:
+                    game.play_with_tamagochi()
+                    output = 'Вы поиграли с питомцем'
+                except TamagochiIsGone as e:
+                    output = str(e)
             case "7":
-                game.rest_tamagochi()
-                output = 'Питомец отдохнул'
+                try:
+                    game.rest_tamagochi()
+                    output = 'Питомец отдохнул'
+                except TamagochiIsGone as e:
+                    output = str(e)
             case "0":
                 break
             case _:
                 output = "Неверная команда"
 
-        os.system('clear')
+        os.system('cls' if os.name == 'nt' else 'clear')
 
 
 if __name__ == "__main__":
