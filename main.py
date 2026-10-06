@@ -1,13 +1,21 @@
 import os
 
 from game.clicker import SimpleRandomClicker
-from game.exceptions import NotEnoughMoney, TamagochiIsGone
+from game.exceptions import (
+    InvalidChoice,
+    NoFoodAvailable,
+    NoFoodInInventory,
+    NoMedicineAvailable,
+    NoMedicineInInventory,
+    NotEnoughMoney,
+    TamagochiIsGone,
+)
 from game.game import SimpleGame
 from game.models import Food, Medicine
 from game.tamagochi import SimpleTamagochi
 
 
-def main():
+def main() -> None:
     all_food = [
         Food(name='Бургер', satiety=20, price=40),
         Food(name='Салат', satiety=10, price=20),
@@ -18,9 +26,9 @@ def main():
         Medicine(name='Ибупрофен', price=30, heal_hp=20, number_of_uses=2)
     ]
 
-    tamagochi = SimpleTamagochi()  #  Вместо SimpleTamagochi импортируйте и создайте инстанс от своей реализации
-    clicker = SimpleRandomClicker(10, 20) #  Вместо SimpleRandomClicker импортируйте и создайте инстанс от своей реализации
-    game = SimpleGame(tamagochi, clicker, all_food=all_food, all_medicine=all_medicine) #  Вместо SimpleGame импортируйте и создайте инстанс от своей реализации
+    tamagochi = SimpleTamagochi()
+    clicker = SimpleRandomClicker(10, 20)
+    game = SimpleGame(tamagochi, clicker, all_food=all_food, all_medicine=all_medicine)
 
     print("Добро пожаловать в Тамагочи-кликер!")
     output = ''
@@ -48,51 +56,43 @@ def main():
         print("7. Отдых")
         print("0. Выход")
 
-        match input("Выберите действие: "):
-            case "1":
-                try:
+        try:
+            match input("Выберите действие: "):
+                case "1":
                     income = game.work()
                     output = f'Вы заработали {income} монет'
-                    game.tamagochi.update()
-                except TamagochiIsGone as e:
-                    output = str(e)
-            case "2":
-                try:
+                case "2":
                     game.buy_food()
-                except NotEnoughMoney as e:
-                    output = str(e)
-            case "3":
-                try:
+                case "3":
                     game.buy_medicine()
-                except NotEnoughMoney as e:
-                    output = str(e)
-            case "4":
-                try:
+                case "4":
                     game.feed_tamagochi()
-                except TamagochiIsGone as e:
-                    output = str(e)
-
-            case "5":
-                try:
+                case "5":
                     game.heal_tamagochi()
-                except TamagochiIsGone as e:
-                    output = str(e)
-            case "6":
-                try:
+                case "6":
                     game.play_with_tamagochi()
                     output = 'Вы поиграли с питомцем'
-                except TamagochiIsGone as e:
-                    output = str(e)
-            case "7":
-                try:
+                case "7":
                     game.rest_tamagochi()
                     output = 'Питомец отдохнул'
-                except TamagochiIsGone as e:
-                    output = str(e)
-            case "0":
-                break
-            case _:
-                output = "Неверная команда"
+                case "0":
+                    break
+                case _:
+                    output = "Неверная команда"
+        except TamagochiIsGone as e:
+            output = str(e)
+        except NotEnoughMoney as e:
+            output = str(e)
+        except InvalidChoice as e:
+            output = str(e)
+        except NoFoodAvailable as e:
+            output = str(e)
+        except NoMedicineAvailable as e:
+            output = str(e)
+        except NoFoodInInventory as e:
+            output = str(e)
+        except NoMedicineInInventory as e:
+            output = str(e)
 
         os.system('cls' if os.name == 'nt' else 'clear')
 

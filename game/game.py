@@ -1,10 +1,19 @@
 """Модуль с интерфейсом и реализацией класса игры."""
 
+import copy
 from abc import ABC, abstractmethod
 from typing import Any
 
 from .clicker import AbstractClicker
-from .exceptions import NotEnoughMoney, TamagochiIsGone
+from .exceptions import (
+    InvalidChoice,
+    NoFoodAvailable,
+    NoFoodInInventory,
+    NoMedicineAvailable,
+    NoMedicineInInventory,
+    NotEnoughMoney,
+    TamagochiIsGone,
+)
 from .models import Food, Medicine
 from .tamagochi import AbstractTamagochi
 
@@ -104,6 +113,7 @@ class SimpleGame(AbstractGame):
         self._shop_medicine: list[Medicine] = list(all_medicine)
         self._inventory_food: list[Food] = []
         self._inventory_medicine: list[Medicine] = []
+        self._coins: int = 100
 
     @property
     def tamagochi(self) -> AbstractTamagochi:
@@ -112,6 +122,14 @@ class SimpleGame(AbstractGame):
         :return: экземпляр SimpleTamagochi
         """
         return self._tamagochi
+
+    @property
+    def coins(self) -> int:
+        """Текущий баланс монет.
+
+        :return: количество монет
+        """
+        return self._coins
 
     @property
     def food(self) -> list[Food]:
@@ -129,17 +147,25 @@ class SimpleGame(AbstractGame):
         """
         return self._inventory_medicine
 
+    def _ensure_alive(self) -> None:
+        """Проверить, жив ли тамагочи.
+
+        :raises TamagochiIsGone: если тамагочи мёртв
+        """
+        if not self._tamagochi.is_alive():
+            raise TamagochiIsGone()
+
     def work(self) -> int:
         """Пойти на работу — использовать кликер для заработка монет.
 
         :return: количество заработанных монет
         :raises TamagochiIsGone: если тамагочи мёртв
         """
-        if not self._tamagochi.is_alive():
-            raise TamagochiIsGone()
+        self._ensure_alive()
         self._clicker.click()
         earned = self._clicker.last_earned
-        self._tamagochi.coins += earned
+        self._coins += earned
+        self._tamagochi.update()
         return earned
 
     def buy_food(self) -> None:
@@ -149,8 +175,7 @@ class SimpleGame(AbstractGame):
         При покупке списывает монеты и добавляет еду в инвентарь.
         """
         if not self._shop_food:
-            print("Еда недоступна для покупки.")
-            return
+            raise NoFoodAvailable()
 
         print("\n--- Доступная еда ---")
         for i, food in enumerate(self._shop_food, 1):
@@ -161,21 +186,23 @@ class SimpleGame(AbstractGame):
 
         try:
             choice = int(input("Выберите еду для покупки (номер): ")) - 1
-            if 0 <= choice < len(self._shop_food):
-                food = self._shop_food[choice]
-                if self._tamagochi.coins >= food.price:
-                    self._tamagochi.coins -= food.price
-                    self._inventory_food.append(food)
-                    print(f"Куплено: {food.name}!")
-                else:
-                    raise NotEnoughMoney(
-                        f"Недостаточно монет для покупки "
-                        f"{food.name} (нужно {food.price})"
-                    )
-            else:
-                print("Неверный выбор!")
-        except (ValueError, IndexError):
-            print("Неверный ввод!")
+        except ValueError:
+            raise InvalidChoice()
+
+        if choice < 0 or choice >= len(self._shop_food):
+            raise InvalidChoice()
+
+        food = self._shop_food[choice]
+
+        if self._coins < food.price:
+            raise NotEnoughMoney(
+                f"Недостаточно монет для покупки "
+                f"{food.name} (нужно {food.price})"
+            )
+
+        self._coins -= food.price
+        self._inventory_food.append(copy.deepcopy(food))
+        print(f"Куплено: {food.name}!")
 
     def buy_medicine(self) -> None:
         """Купить лекарство в магазине.
@@ -184,8 +211,7 @@ class SimpleGame(AbstractGame):
         При покупке списывает монеты и добавляет лекарство в инвентарь.
         """
         if not self._shop_medicine:
-            print("Лекарства недоступны для покупки.")
-            return
+            raise NoMedicineAvailable()
 
         print("\n--- Доступные лекарства ---")
         for i, med in enumerate(self._shop_medicine, 1):
@@ -198,21 +224,23 @@ class SimpleGame(AbstractGame):
 
         try:
             choice = int(input("Выберите лекарство для покупки (номер): ")) - 1
-            if 0 <= choice < len(self._shop_medicine):
-                med = self._shop_medicine[choice]
-                if self._tamagochi.coins >= med.price:
-                    self._tamagochi.coins -= med.price
-                    self._inventory_medicine.append(med)
-                    print(f"Куплено: {med.name}!")
-                else:
-                    raise NotEnoughMoney(
-                        f"Недостаточно монет для покупки "
-                        f"{med.name} (нужно {med.price})"
-                    )
-            else:
-                print("Неверный выбор!")
-        except (ValueError, IndexError):
-            print("Неверный ввод!")
+        except ValueError:
+            raise InvalidChoice()
+
+        if choice < 0 or choice >= len(self._shop_medicine):
+            raise InvalidChoice()
+
+        med = self._shop_medicine[choice]
+
+        if self._coins < med.price:
+            raise NotEnoughMoney(
+                f"Недостаточно монет для покупки "
+                f"{med.name} (нужно {med.price})"
+            )
+
+        self._coins -= med.price
+        self._inventory_medicine.append(copy.deepcopy(med))
+        print(f"Куплено: {med.name}!")
 
     def feed_tamagochi(self) -> None:
         """Покормить тамагочи.
@@ -222,12 +250,10 @@ class SimpleGame(AbstractGame):
 
         :raises TamagochiIsGone: если тамагочи мёртв
         """
-        if not self._tamagochi.is_alive():
-            raise TamagochiIsGone()
+        self._ensure_alive()
 
         if not self._inventory_food:
-            print("В инвентаре нет еды! Купите еду в магазине.")
-            return
+            raise NoFoodInInventory()
 
         print("\n--- Ваша еда ---")
         for i, food in enumerate(self._inventory_food, 1):
@@ -235,14 +261,16 @@ class SimpleGame(AbstractGame):
 
         try:
             choice = int(input("Выберите еду для кормления (номер): ")) - 1
-            if 0 <= choice < len(self._inventory_food):
-                food = self._inventory_food.pop(choice)
-                self._tamagochi.feed(food)
-                print(f"Покормили: {food.name}!")
-            else:
-                print("Неверный выбор!")
-        except (ValueError, IndexError):
-            print("Неверный ввод!")
+        except ValueError:
+            raise InvalidChoice()
+
+        if choice < 0 or choice >= len(self._inventory_food):
+            raise InvalidChoice()
+
+        food = self._inventory_food.pop(choice)
+        self._tamagochi.feed(food)
+        self._tamagochi.update()
+        print(f"Покормили: {food.name}!")
 
     def heal_tamagochi(self) -> None:
         """Вылечить тамагочи.
@@ -252,12 +280,10 @@ class SimpleGame(AbstractGame):
 
         :raises TamagochiIsGone: если тамагочи мёртв
         """
-        if not self._tamagochi.is_alive():
-            raise TamagochiIsGone()
+        self._ensure_alive()
 
         if not self._inventory_medicine:
-            print("В инвентаре нет лекарств! Купите лекарства в магазине.")
-            return
+            raise NoMedicineInInventory()
 
         # Фильтруем пустые лекарства
         available = [m for m in self._inventory_medicine if not m.is_empty()]
@@ -276,17 +302,20 @@ class SimpleGame(AbstractGame):
 
         try:
             choice = int(input("Выберите лекарство для лечения (номер): ")) - 1
-            if 0 <= choice < len(self._inventory_medicine):
-                med = self._inventory_medicine[choice]
-                if med.is_empty():
-                    print("Это лекарство закончилось!")
-                    return
-                self._tamagochi.heal(med)
-                print(f"Вылечили: {med.name}!")
-            else:
-                print("Неверный выбор!")
-        except (ValueError, IndexError):
-            print("Неверный ввод!")
+        except ValueError:
+            raise InvalidChoice()
+
+        if choice < 0 or choice >= len(self._inventory_medicine):
+            raise InvalidChoice()
+
+        med = self._inventory_medicine[choice]
+        if med.is_empty():
+            print("Это лекарство закончилось!")
+            return
+
+        self._tamagochi.heal(med)
+        self._tamagochi.update()
+        print(f"Вылечили: {med.name}!")
 
     def rest_tamagochi(self) -> None:
         """Отдохнуть с тамагочи.
@@ -295,9 +324,9 @@ class SimpleGame(AbstractGame):
 
         :raises TamagochiIsGone: если тамагочи мёртв
         """
-        if not self._tamagochi.is_alive():
-            raise TamagochiIsGone()
+        self._ensure_alive()
         self._tamagochi.rest()
+        self._tamagochi.update()
 
     def play_with_tamagochi(self) -> None:
         """Поиграть с тамагочи.
@@ -306,9 +335,9 @@ class SimpleGame(AbstractGame):
 
         :raises TamagochiIsGone: если тамагочи мёртв
         """
-        if not self._tamagochi.is_alive():
-            raise TamagochiIsGone()
+        self._ensure_alive()
         self._tamagochi.play()
+        self._tamagochi.update()
 
     def get_status(self) -> dict[str, Any]:
         """Получить полный статус игры.
@@ -316,5 +345,5 @@ class SimpleGame(AbstractGame):
         :return: словарь с ключами 'hunger', 'hp', 'energy', 'coins'
         """
         status = self._tamagochi.status
-        status["coins"] = self._tamagochi.coins
+        status["coins"] = self._coins
         return status

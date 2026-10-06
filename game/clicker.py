@@ -46,7 +46,6 @@ class SimpleRandomClicker(AbstractClicker):
         """
         self._income_per_click = income_per_click
         self._max_income_per_click = max_income_per_click
-        self._coins = 0
         self._last_earned = 0
 
     def click(self) -> None:
@@ -55,7 +54,6 @@ class SimpleRandomClicker(AbstractClicker):
             self._income_per_click, self._max_income_per_click
         )
         self._last_earned = earned
-        self._coins += earned
 
     @property
     def last_earned(self) -> int:

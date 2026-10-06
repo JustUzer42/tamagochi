@@ -5,6 +5,15 @@ from abc import ABC, abstractmethod
 
 from .models import Food, Medicine
 
+# Константы для значений тамагочи
+MAX_HUNGER = 100
+MAX_HP = 100
+MAX_ENERGY = 100
+
+INITIAL_HUNGER = 50
+INITIAL_HP = 100
+INITIAL_ENERGY = 100
+
 
 class AbstractTamagochi(ABC):
     """Интерфейс логики тамагочи."""
@@ -83,27 +92,10 @@ class SimpleTamagochi(AbstractTamagochi):
         :param name: имя питомца
         """
         self._name = name
-        self._hunger: int = 50  # 0 - не голоден, 100 - сильно голоден
-        self._hp: int = 100  # здоровье
-        self._energy: int = 100  # энергия
+        self._hunger: int = INITIAL_HUNGER
+        self._hp: int = INITIAL_HP
+        self._energy: int = INITIAL_ENERGY
         self._is_sick: bool = False
-        self._coins: int = 100  # стартовый баланс монет
-
-    @property
-    def coins(self) -> int:
-        """Текущий баланс монет.
-
-        :return: количество монет
-        """
-        return self._coins
-
-    @coins.setter
-    def coins(self, value: int) -> None:
-        """Установить баланс монет.
-
-        :param value: новое количество монет
-        """
-        self._coins = value
 
     def feed(self, food: Food) -> None:
         """Кормить тамагочи.
@@ -121,7 +113,7 @@ class SimpleTamagochi(AbstractTamagochi):
 
         Увеличивает голод и уменьшает энергию.
         """
-        self._hunger = min(100, self._hunger + 10)
+        self._hunger = min(MAX_HUNGER, self._hunger + 10)
         self._energy = max(0, self._energy - 15)
 
     def rest(self) -> None:
@@ -130,10 +122,10 @@ class SimpleTamagochi(AbstractTamagochi):
         Восстанавливает энергию. Если болен — восстановление менее эффективно.
         """
         if self._is_sick:
-            self._energy = min(100, self._energy + 20)
+            self._energy = min(MAX_ENERGY, self._energy + 20)
         else:
-            self._energy = min(100, self._energy + 40)
-        self._hunger = min(100, self._hunger + 5)
+            self._energy = min(MAX_ENERGY, self._energy + 40)
+        self._hunger = min(MAX_HUNGER, self._hunger + 5)
 
     def heal(self, medicine: Medicine) -> None:
         """Вылечить тамагочи.
@@ -145,7 +137,7 @@ class SimpleTamagochi(AbstractTamagochi):
         """
         if medicine.is_empty():
             raise ValueError("Лекарство закончилось")
-        self._hp = min(100, self._hp + medicine.heal_hp)
+        self._hp = min(MAX_HP, self._hp + medicine.heal_hp)
         self._is_sick = False
         medicine.uses += 1
 
@@ -182,7 +174,7 @@ class SimpleTamagochi(AbstractTamagochi):
         случайный шанс заболеть, уменьшает энергию.
         """
         # Голод увеличивается со временем
-        self._hunger = min(100, self._hunger + 5)
+        self._hunger = min(MAX_HUNGER, self._hunger + 5)
 
         # При сильном голоде здоровье уменьшается
         if self._hunger >= 90:
